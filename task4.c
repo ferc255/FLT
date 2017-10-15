@@ -1,3 +1,4 @@
+#include <limits.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -415,13 +416,47 @@ void calc_sets(node_t** v)
 }
 
 
+build_automaton(int autom[N][(1 << CHAR_BIT)], int* size, node_t* root)
+{
+    node_t* aux[N][N];
+    int state_size[N];
+    int i;
+    for (i = 0; i < root->first_ptr; i++)
+    {
+        aux[0][state_size[0]++] = root->first[i];
+    }
+    size++;
+    
+    for (i = 0; i < *size; i++)
+    {
+        int j;
+        for (j = 0; j < (1 << CHAR_BIT); j++)
+        {
+            int k;
+            for (k = 0; k < state_size[i]; k++)
+            {
+                if (aux[i][k]->symbol == j)
+                {
+                    aux[*size][state_size[*size]++] = aux[i][k];
+                }
+            }
+            
+            //for ()
+        }
+    }
+}
+
+
 int main()
 {
     node_t* work = build_parse_tree();
     
     calc_sets(&work);
     
-    print_dfs(work);
+    //print_dfs(work);
+    
+    int autom[N][(1 << CHAR_BIT)];
+    //build_automaton(autom, work);
     
     return 0;
 }
