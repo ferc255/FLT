@@ -1,514 +1,427 @@
-#include <limits.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
+#define N 1000
 
-const int BUFFER_SIZE = 300;
-const int ERROR_STATE = -1;
-const int NO_MATCH = -1;
+typedef enum
+{
+    NT_CHAR,
+    NT_CAT,
+    NT_STAR,
+    NT_OR,
+    NT_END,
+    NT_LPAREN,
+    NT_RPAREN,
+} node_type_t;
 
+typedef struct rule_token_t
+{
+    node_type_t type;
+    char symbol;
+} rule_token_t;
 
-typedef struct automaton_t
+typedef struct buffer_t
 {
     int size;
-    char* abbrev;
-    bool* final;
-    int** table;
-} automaton_t;
+    rule_token_t* list;
+} buffer_t;
 
-typedef struct automaton_list_t
+typedef struct node_t
 {
-    int count;
-    automaton_t* list;
-} automaton_list_t;
+    int index;
+    node_type_t type;
+    char symbol;
+    int prior;
+    bool is_nullable;
+    int first_ptr, last_ptr, follow_ptr;
+    struct node_t* first[N];
+    struct node_t* last[N];
+    struct node_t* follow[N];
+    struct node_t* left;
+    struct node_t* right;
+    struct node_t* parent;
+} node_t;
 
 
-int calc_max_match(automaton_t* automaton, char* input, int start_pos)
+int default_prior[7] = 
 {
-    int cur_state = 0;
-    int result = automaton->final[0] ? 0 : NO_MATCH;
-    
-    int i;
-    for (i = start_pos; i < strlen(input); i++)
+    [NT_CHAR] = 0,
+    [NT_END] = 0,
+    [NT_STAR] = 1,
+    [NT_CAT] = 2,
+    [NT_OR] = 3,
+    [NT_LPAREN] = 4,
+    [NT_RPAREN] = 4,
+};
+
+buffer_t input = 
+{
+    .size = 14,
+    .list = (rule_token_t[])
     {
-        cur_state = automaton->table[cur_state][input[i]];
-        if (cur_state == ERROR_STATE)
         {
-            return result;
-        }
-        if (automaton->final[cur_state])
+            .type = NT_LPAREN,
+        },
         {
-            result = i - start_pos + 1;
-        }
+            .type = NT_CHAR,
+            .symbol = 'a',
+        },
+        {
+            .type = NT_OR,
+        },
+        {
+            .type = NT_CHAR,
+            .symbol = 'b',
+        },
+        {
+            .type = NT_RPAREN,
+        },
+        {
+            .type = NT_STAR,
+        },
+        {
+            .type = NT_CAT,
+        },
+        {
+            .type = NT_CHAR,
+            .symbol = 'a',
+        },
+        {
+            .type = NT_CAT,
+        },
+        {
+            .type = NT_CHAR,
+            .symbol = 'b',
+        },
+        {
+            .type = NT_CAT,
+        },
+        {
+            .type = NT_CHAR,
+            .symbol = 'b',
+        },
+        {
+            .type = NT_CAT,
+        },
+        {
+            .type = NT_END,
+        },
+    },
+};
+
+
+/*
+buffer_t input = 
+{
+    .size = 18,
+    .list = (rule_token_t[])
+    {
+        {
+            .type = NT_CHAR,
+            .symbol = 'a',
+        },
+        {
+            .type = NT_CAT,
+        },
+        {
+            .type = NT_LPAREN,
+        },
+        {
+            .type = NT_CHAR,
+            .symbol = 'b',
+        },
+        {
+            .type = NT_CAT,
+        },
+        {
+            .type = NT_LPAREN,
+        },
+        {
+            .type = NT_CHAR,
+            .symbol = 'c',
+        },
+        {
+            .type = NT_OR,
+        },
+        {
+            .type = NT_CHAR,
+            .symbol = 'd',
+        },
+        {
+            .type = NT_STAR,
+        },
+        {
+            .type = NT_RPAREN,
+        },
+        {
+            .type = NT_CAT,
+        },
+        {
+            .type = NT_CHAR,
+            .symbol = 'e',
+        },
+        {
+            .type = NT_RPAREN,
+        },
+        {
+            .type = NT_CAT,
+        },
+        {
+            .type = NT_CHAR,
+            .symbol = 'f',
+        },
+        {
+            .type = NT_CAT,
+        },
+        {
+            .type = NT_END,
+        },
+    },
+};
+*/
+
+void print_arr(node_t* arr[1000], int *sz)
+{
+    int i;
+    for (i = 0; i < *sz; i++)
+    {
+        printf("%p ", arr[i]);
     }
-    
-    return result;
+    printf("\n");
 }
 
 
-void print_token(char* abbrev, char* input, int start_pos, int len)
+void print_dfs(node_t* v)
 {
-    printf("<%s, '", abbrev);
-    
-    int i;
-    for (i = 0; i < len; i++)
+    if (v->type)
     {
-        char symbol = input[start_pos + i];
-        if (symbol == 9)
+        printf("[%d]\n", v->type);
+    }
+    else
+    {
+        printf("[%c]\n", v->symbol);
+    }
+    if (v->left)
+    {
+        printf("LF\n");
+        print_dfs(v->left);
+    }
+    if (v->right)
+    {
+        printf("RG\n");
+        print_dfs(v->right);
+    }
+    if (v->type)
+    {
+        printf("[%d] ", v->type);
+    }
+    else
+    {
+        printf("[%c] ", v->symbol);
+    }
+    printf("EXIT\n");
+
+    print_arr(v->follow, &v->follow_ptr);
+    printf("====\n");
+}
+
+void link(node_t** work, node_t** current)
+{
+    if ((*work)->parent)
+    {
+        if ((*work)->parent->left == *work)
         {
-            printf("\\t");
+            (*work)->parent->left = *current;
         }
-        else if (symbol == 10)
+        else if ((*work)->parent->right == *work)
         {
-            printf("\\n");
-        }
-        else if (symbol == 13)
-        {
-            printf("\\r");
+            (*work)->parent->right = *current;
         }
         else
         {
-            printf("%c", symbol);
+            printf("Link Error\n");
+            exit(0);
+        }
+        (*current)->parent = (*work)->parent;
+    }
+}
+
+node_t* build_parse_tree()
+{
+    struct node_t* work = malloc(sizeof(node_t));
+    
+    int i;
+    for (i = 0; i < input.size; i++)
+    {
+        struct node_t* current = malloc(sizeof(node_t));
+        current->type = input.list[i].type;
+        current->symbol = input.list[i].symbol;
+        current->prior = default_prior[current->type];
+        
+        switch (current->type)
+        {
+            case NT_CHAR: case NT_END:
+                link(&work, &current);
+                
+                work = current;
+                break;
+                
+            case NT_LPAREN:
+                link(&work, &current);
+                
+                work = current;
+                work->left = malloc(sizeof(node_t));
+                work->left->parent = work;
+                work = work->left;
+                break;
+                
+            case NT_RPAREN:
+                while (work->type != NT_LPAREN)
+                {
+                    work = work->parent;
+                }
+                work->prior = 0;
+                break;
+                
+            case NT_STAR:
+                link(&work, &current);
+                
+                current->left = work;
+                work->parent = current;
+                work = current;
+                break;
+                
+            case NT_OR: case NT_CAT:
+                while (work->parent && work->parent->prior <= current->prior)
+                {
+                    work = work->parent;
+                }
+                link(&work, &current);
+                
+                current->left = work;
+                current->right = malloc(sizeof(node_t));
+                current->right->parent = current;
+                work->parent = current;
+                work = current->right;
         }
     }
     
-    printf("'>\n");
+    while (work->parent)
+    {
+        work = work->parent;
+    }
+    
+    return work;
+}
+
+
+void merge_arrays(node_t* a[1000], int* sz_a, node_t* b[1000], int* sz_b)
+{
+    int i;
+    for (i = 0; i < *sz_b; i++)
+    {
+        a[(*sz_a)++] = b[i];
+    }
+}
+
+void merge_sets(node_t* a[1000], int* sz_a, node_t* b[1000], int* sz_b)
+{
+    int i;
+    for (i = 0; i < *sz_b; i++)
+    {
+        bool found = false;
+        int j;
+        for (j = 0; j < *sz_a; j++)
+        {
+            if (a[j] == b[i])
+            {
+                found = true;
+                break;
+            }
+        }
+        
+        if (!found)
+        {
+            a[(*sz_a)++] = b[i];
+        }
+    }
+}
+
+void calc_sets(node_t** v)
+{
+    if ((*v)->left)
+    {
+        calc_sets(&(*v)->left);
+    }
+    if ((*v)->right)
+    {
+        calc_sets(&(*v)->right);
+    }
+    if (!(*v)->left && !(*v)->right)
+    {
+        (*v)->is_nullable = false;
+        (*v)->first[(*v)->first_ptr++] = (*v)->last[(*v)->last_ptr++] = *v;
+    }
+    else if ((*v)->type == NT_OR)
+    {
+        (*v)->is_nullable = (*v)->left->is_nullable || (*v)->right->is_nullable;
+        merge_arrays((*v)->first, &(*v)->first_ptr, (*v)->left->first, &(*v)->left->first_ptr);
+        merge_arrays((*v)->first, &(*v)->first_ptr, (*v)->right->first, &(*v)->right->first_ptr);
+
+        merge_arrays((*v)->last, &(*v)->last_ptr, (*v)->left->last, &(*v)->left->last_ptr);
+        merge_arrays((*v)->last, &(*v)->last_ptr, (*v)->right->last, &(*v)->right->last_ptr);
+    }
+    else if ((*v)->type == NT_CAT)
+    {
+        (*v)->is_nullable = (*v)->left->is_nullable && (*v)->right->is_nullable;
+        merge_arrays((*v)->first, &(*v)->first_ptr, (*v)->left->first, &(*v)->left->first_ptr);
+        if ((*v)->left->is_nullable)
+        {
+            merge_arrays((*v)->first, &(*v)->first_ptr, (*v)->right->first, &(*v)->right->first_ptr);
+        }
+        
+        merge_arrays((*v)->last, &(*v)->last_ptr, (*v)->right->last, &(*v)->right->last_ptr);
+        if ((*v)->right->is_nullable)
+        {
+            merge_arrays((*v)->last, &(*v)->last_ptr, (*v)->left->last, &(*v)->left->last_ptr);
+        }
+        
+        int i;
+        for (i = 0; i < (*v)->left->last_ptr; i++)
+        {
+            merge_sets((*v)->left->last[i]->follow, &(*v)->left->last[i]->follow_ptr, (*v)->right->first, &(*v)->right->first_ptr);
+        }
+    }
+    else if ((*v)->type == NT_STAR)
+    {
+        (*v)->is_nullable = true;
+        merge_arrays((*v)->first, &(*v)->first_ptr, (*v)->left->first, &(*v)->left->first_ptr);
+        merge_arrays((*v)->last, &(*v)->last_ptr, (*v)->left->last, &(*v)->left->last_ptr);
+        
+        int i;
+        for (i = 0; i < (*v)->left->last_ptr; i++)
+        {
+            merge_sets((*v)->left->last[i]->follow, &(*v)->left->last[i]->follow_ptr, (*v)->left->first, &(*v)->left->first_ptr);
+        }
+    }
+    else if ((*v)->type == NT_LPAREN)
+    {
+        (*v)->is_nullable = (*v)->left->is_nullable;
+        merge_arrays((*v)->first, &(*v)->first_ptr, (*v)->left->first, &(*v)->left->first_ptr);
+        merge_arrays((*v)->last, &(*v)->last_ptr, (*v)->left->last, &(*v)->left->last_ptr);
+    }
 }
 
 
 int main()
 {
-    automaton_list_t automs =
-    {
-        .count = 9,
-        .list = (automaton_t[])
-        {
-            {
-                .size = 4,
-                .abbrev = "OP",
-                .final = (bool[])
-                {
-                    false, true, true, true,
-                },
-                .table = (int*[])
-                {
-                    (int[])
-                    {
-                        [0 ... (1 << CHAR_BIT) - 1] = ERROR_STATE,
-                        ['='] = 1,
-                        ['<'] = 2,
-                        ['>'] = 3, 
-                        ['+'] = 1,
-                        ['-'] = 1,
-                        ['*'] = 1,
-                        ['/'] = 1,
-                    },
-                    (int[])
-                    {
-                        [0 ... (1 << CHAR_BIT) - 1] = ERROR_STATE,
-                    },
-                    (int[])
-                    {
-                        [0 ... (1 << CHAR_BIT) - 1] = ERROR_STATE,
-                        ['='] = 1,
-                        ['>'] = 1,
-                    },
-                    (int[])
-                    {
-                        [0 ... (1 << CHAR_BIT) - 1] = ERROR_STATE,
-                        ['='] = 1,
-                    },
-                },
-            },
-            {
-                .size = 22,
-                .abbrev = "KW",
-                .final = (bool[])
-                {
-                    [0 ... 30] = false,
-                    [21] = true,
-                },
-                .table = (int*[])
-                {
-                    (int[])
-                    {
-                        [0 ... (1 << CHAR_BIT) - 1] = ERROR_STATE,
-                        ['b'] = 1,
-                        ['e'] = 5,
-                        ['i'] = 9,
-                        ['l'] = 10,
-                        ['t'] = 12,
-                        ['v'] = 15,
-                        ['w'] = 17,
-                    },
-                    (int[])
-                    {
-                        [0 ... (1 << CHAR_BIT) - 1] = ERROR_STATE,
-                        ['e'] = 2,
-                    },
-                    (int[])
-                    {
-                        [0 ... (1 << CHAR_BIT) - 1] = ERROR_STATE,
-                        ['g'] = 3,
-                    },
-                    (int[])
-                    {
-                        [0 ... (1 << CHAR_BIT) - 1] = ERROR_STATE,
-                        ['i'] = 4,
-                    },
-                    (int[])
-                    {
-                        [0 ... (1 << CHAR_BIT) - 1] = ERROR_STATE,
-                        ['n'] = 21,
-                    },
-                    (int[]) // 5
-                    {
-                        [0 ... (1 << CHAR_BIT) - 1] = ERROR_STATE,
-                        ['l'] = 6,
-                        ['n'] = 8,
-                    },
-                    (int[])
-                    {
-                        [0 ... (1 << CHAR_BIT) - 1] = ERROR_STATE,
-                        ['s'] = 7,
-                    },
-                    (int[])
-                    {
-                        [0 ... (1 << CHAR_BIT) - 1] = ERROR_STATE,
-                        ['e'] = 21,
-                    },
-                    (int[]) // 8
-                    {
-                        [0 ... (1 << CHAR_BIT) - 1] = ERROR_STATE,
-                        ['d'] = 21,
-                    },
-                    (int[])
-                    {
-                        [0 ... (1 << CHAR_BIT) - 1] = ERROR_STATE,
-                        ['f'] = 21,
-                        ['n'] = 21,
-                    },
-                    (int[]) // 10
-                    {
-                        [0 ... (1 << CHAR_BIT) - 1] = ERROR_STATE,
-                        ['e'] = 11,
-                    },
-                    (int[])
-                    {
-                        [0 ... (1 << CHAR_BIT) - 1] = ERROR_STATE,
-                        ['t'] = 21,
-                    },
-                    (int[])
-                    {
-                        [0 ... (1 << CHAR_BIT) - 1] = ERROR_STATE,
-                        ['h'] = 13,
-                    },
-                    (int[])
-                    {
-                        [0 ... (1 << CHAR_BIT) - 1] = ERROR_STATE,
-                        ['e'] = 14,
-                    },
-                    (int[]) // 14
-                    {
-                        [0 ... (1 << CHAR_BIT) - 1] = ERROR_STATE,
-                        ['n'] = 21,
-                    },
-                    (int[])
-                    {
-                        [0 ... (1 << CHAR_BIT) - 1] = ERROR_STATE,
-                        ['a'] = 16
-                    },
-                    (int[])
-                    {
-                        [0 ... (1 << CHAR_BIT) - 1] = ERROR_STATE,
-                        ['l'] = 21,
-                    },
-                    (int[]) // 17
-                    {
-                        [0 ... (1 << CHAR_BIT) - 1] = ERROR_STATE,
-                        ['h'] = 18,
-                    },
-                    (int[])
-                    {
-                        [0 ... (1 << CHAR_BIT) - 1] = ERROR_STATE,
-                        ['i'] = 19,
-                    },
-                    (int[])
-                    {
-                        [0 ... (1 << CHAR_BIT) - 1] = ERROR_STATE,
-                        ['l'] = 20,
-                    },
-                    (int[])
-                    {
-                        [0 ... (1 << CHAR_BIT) - 1] = ERROR_STATE,
-                        ['e'] = 21,
-                    },
-                    (int[]) // 21
-                    {
-                        [0 ... (1 << CHAR_BIT) - 1] = ERROR_STATE,
-                    },
-                },
-            },
-            {
-                .size = 3,
-                .abbrev = "LC",
-                .final = (bool[])
-                {
-                    false, false, true,
-                },
-                .table = (int*[])
-                {
-                    (int[])
-                    {
-                        [0 ... (1 << CHAR_BIT) - 1] = ERROR_STATE,
-                        ['#'] = 1,
-                    },
-                    (int[])
-                    {
-                        [0 ... (1 << CHAR_BIT) - 1] = ERROR_STATE,
-                        ['f'] = 2,
-                        ['t'] = 2,
-                    },
-                    (int[])
-                    {
-                        [0 ... (1 << CHAR_BIT) - 1] = ERROR_STATE,
-                    },
-                },
-            },
-            {
-                .size = 3,
-                .abbrev = "ID",
-                .final = (bool[])
-                {
-                    false, true, true,
-                },
-                .table = (int*[])
-                {
-                    (int[])
-                    {
-                        [0 ... (1 << CHAR_BIT) - 1] = ERROR_STATE,
-                        ['a' ... 'z'] = 1,
-                        ['A' ... 'Z'] = 1,
-                        ['<'] = 2,
-                        ['>'] = 2,
-                        ['!'] = 2,
-                        ['#'] = 2,
-                        ['+'] = 2,
-                        ['-'] = 2,
-                        ['*'] = 2,
-                        ['/'] = 2,
-                        ['&'] = 2,
-                        ['$'] = 2,
-                        ['@'] = 2,
-                        ['~'] = 2,
-                    },
-                    (int[])
-                    {
-                        [0 ... (1 << CHAR_BIT) - 1] = ERROR_STATE,
-                        ['a' ... 'z'] = 1,
-                        ['A' ... 'Z'] = 1,
-                        ['0' ... '9'] = 1,
-                        ['_'] = 1,
-                        ['\''] = 1,
-                    },
-                    (int[])
-                    {
-                        [0 ... (1 << CHAR_BIT) - 1] = ERROR_STATE,
-                        ['<'] = 2,
-                        ['>'] = 2,
-                        ['!'] = 2,
-                        ['#'] = 2,
-                        ['+'] = 2,
-                        ['-'] = 2,
-                        ['*'] = 2,
-                        ['/'] = 2,
-                        ['&'] = 2,
-                        ['$'] = 2,
-                        ['@'] = 2,
-                        ['~'] = 2,
-                    },
-                },
-            },
-            {
-                .size = 2,
-                .abbrev = "WS",
-                .final = (bool[])
-                {
-                    false, true,
-                },
-                .table = (int*[])
-                {
-                    (int[])
-                    {
-                        [0 ... (1 << CHAR_BIT) - 1] = ERROR_STATE,
-                        [' '] = 1,
-                        ['\n'] = 1,
-                        ['\t'] = 1,
-                        ['\r'] = 1,
-                    },
-                    (int[])
-                    {
-                        [0 ... (1 << CHAR_BIT) - 1] = ERROR_STATE,
-                        [' '] = 1,
-                        ['\n'] = 1,
-                        ['\t'] = 1,
-                        ['\r'] = 1,
-                    },
-                },
-            },
-            {
-                .size = 2,
-                .abbrev = "IN",
-                .final = (bool[])
-                {
-                    false, true,
-                },
-                .table = (int*[])
-                {
-                    (int[])
-                    {
-                        [0 ... (1 << CHAR_BIT) - 1] = ERROR_STATE,
-                        ['0' ... '9'] = 1,
-                    },
-                    (int[])
-                    {
-                        [0 ... (1 << CHAR_BIT) - 1] = ERROR_STATE,
-                        ['0' ... '9'] = 1,
-                    },
-                },
-            },
-            {
-                .size = 7,
-                .abbrev = "NM",
-                .final = (bool[])
-                {
-                    [0 ... 6] = false,
-                    [3] = true,
-                    [6] = true,
-                },
-                .table = (int*[])
-                {
-                    (int[])
-                    {
-                        [0 ... (1 << CHAR_BIT) - 1] = ERROR_STATE,
-                        ['0' ... '9'] = 1,
-                        ['.'] = 2,
-                    },
-                    (int[])
-                    {
-                        [0 ... (1 << CHAR_BIT) - 1] = ERROR_STATE,
-                        ['0' ... '9'] = 1,
-                        ['.'] = 3,
-                    },
-                    (int[])
-                    {
-                        [0 ... (1 << CHAR_BIT) - 1] = ERROR_STATE,
-                        ['0' ... '9'] = 3,
-                    },
-                    (int[])
-                    {
-                        [0 ... (1 << CHAR_BIT) - 1] = ERROR_STATE,
-                        ['0' ... '9'] = 3,
-                        ['e'] = 4,
-                        ['E'] = 4,
-                    },
-                    (int[])
-                    {
-                        [0 ... (1 << CHAR_BIT) - 1] = ERROR_STATE,
-                        ['0' ... '9'] = 6,
-                        ['+'] = 5,
-                        ['-'] = 5,
-                    },
-                    (int[])
-                    {
-                        [0 ... (1 << CHAR_BIT) - 1] = ERROR_STATE,
-                        ['0' ... '9'] = 6,
-                    },
-                    (int[])
-                    {
-                        [0 ... (1 << CHAR_BIT) - 1] = ERROR_STATE,
-                        ['0' ... '9'] = 6,
-                    },
-                },
-            },
-            {
-                .size = 2,
-                .abbrev = "LP",
-                .final = (bool[])
-                {
-                    false, true
-                },
-                .table = (int*[])
-                {
-                    (int[])
-                    {
-                        [0 ... (1 << CHAR_BIT) - 1] = ERROR_STATE,
-                        ['('] = 1,
-                    },
-                    (int[])
-                    {
-                        [0 ... (1 << CHAR_BIT) - 1] = ERROR_STATE,
-                    },
-                },
-            },
-            {
-                .size = 2,
-                .abbrev = "RP",
-                .final = (bool[])
-                {
-                    false, true,
-                },
-                .table = (int*[])
-                {
-                    (int[])
-                    {
-                        [0 ... (1 << CHAR_BIT) - 1] = ERROR_STATE,
-                        [')'] = 1,
-                    },
-                    (int[])
-                    {
-                        [0 ... (1 << CHAR_BIT) - 1] = ERROR_STATE,
-                    },
-                },
-            },
-        },
-    }; 
+    node_t* work = build_parse_tree();
     
+    calc_sets(&work);
     
-    char input[BUFFER_SIZE];
-    char temp[BUFFER_SIZE];
-    while (fgets(temp, sizeof temp, stdin))
-    {
-        strcat(input, temp);
-    }
-    //printf("%s\n", input);
-    
-    int i;
-    for (i = 0; i < strlen(input); )
-    {
-        char* abbrev;
-        int max_match = NO_MATCH;
-        int j;
-        for (j = 0; j < automs.count; j++)
-        {
-            int cur_match = calc_max_match(&automs.list[j], input, i);
-            if (cur_match > max_match)
-            {
-                max_match = cur_match;
-                abbrev = automs.list[j].abbrev;
-            }
-        }
-        
-        if (max_match == NO_MATCH)
-        {
-            printf("Error while parsing.\n");
-            return 0;
-        }
-        
-        print_token(abbrev, input, i, max_match);
-        i += max_match;
-    }
+    print_dfs(work);
     
     return 0;
 }
