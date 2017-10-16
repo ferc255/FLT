@@ -4,7 +4,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define N 1000
+#define N 200
+
+const int BUFFER_SIZE = 300;
+const int ERROR_STATE = -1;
+const int NO_MATCH = -1;
 
 typedef enum
 {
@@ -57,6 +61,7 @@ int default_prior[7] =
     [NT_RPAREN] = 4,
 };
 
+/*
 buffer_t input = 
 {
     .size = 14,
@@ -111,9 +116,9 @@ buffer_t input =
         },
     },
 };
+*/
 
 
-/*
 buffer_t input = 
 {
     .size = 18,
@@ -181,7 +186,7 @@ buffer_t input =
         },
     },
 };
-*/
+
 
 void print_arr(node_t* arr[1000], int *sz)
 {
@@ -224,6 +229,7 @@ void print_dfs(node_t* v)
     }
     printf("EXIT\n");
 
+    //print_arr(v->first, &v->first_ptr);
     print_arr(v->follow, &v->follow_ptr);
     printf("====\n");
 }
@@ -416,7 +422,60 @@ void calc_sets(node_t** v)
 }
 
 
-build_automaton(int autom[N][(1 << CHAR_BIT)], int* size, node_t* root)
+int find_state(node_t* aux[N][N], int size, int state_size[N])
+{
+    int i;
+    for (i = 0; i < size; i++)
+    {
+        if (state_size[i] != state_size[size])
+        {
+            continue;
+        }
+        
+        bool is_same = true;
+        int j;
+        bool used[N] = {[0 ... N - 1] = false};
+        for (j = 0; j < state_size[i]; j++)
+        {
+            int k;
+            bool found = false;
+            for (k = 0; k < state_size[size]; k++)
+            {
+                if (!used[k] && aux[i][j] == aux[size][k])
+                {
+                    used[k] = true;
+                    found = true;
+                    break;
+                }
+            }
+            if (!found)
+            {
+                is_same = false;
+                break;
+            }
+        }
+        if (is_same)
+        {
+            return i;
+        }
+    }
+    
+    return size;
+}
+
+
+void print_arr2(node_t* arr[(1 << CHAR_BIT)], int *sz)
+{
+    int i;
+    for (i = 0; i < *sz; i++)
+    {
+        printf("%p ", arr[i]);
+    }
+    printf("\n");
+}
+
+
+void build_automaton(int autom[N][(1 << CHAR_BIT)], int* size, node_t* root)
 {
     node_t* aux[N][N];
     int state_size[N];
@@ -425,27 +484,74 @@ build_automaton(int autom[N][(1 << CHAR_BIT)], int* size, node_t* root)
     {
         aux[0][state_size[0]++] = root->first[i];
     }
-    size++;
+    (*size)++;
+    
+    printf("OPAAA %d\n", autom[0][104]);
     
     for (i = 0; i < *size; i++)
     {
         int j;
         for (j = 0; j < (1 << CHAR_BIT); j++)
         {
+            state_size[*size] = 0;
             int k;
             for (k = 0; k < state_size[i]; k++)
             {
                 if (aux[i][k]->symbol == j)
                 {
-                    aux[*size][state_size[*size]++] = aux[i][k];
+                    merge_sets(aux[*size], &state_size[*size], aux[i][k]->follow, &aux[i][k]->follow_ptr);
                 }
             }
+            if (state_size[*size] == 0)
+            {
+                continue;
+            }
+            int state_idx = find_state(aux, *size, state_size);
             
-            //for ()
+            if (state_idx == *size)
+            {
+                (*size)++;
+            }
+            
+            if (state_size[state_idx] == 0)
+            {
+                autom[i][j] = ERROR_STATE;
+            }
+            else
+            {
+                autom[i][j] = state_idx;
+            }
         }
     }
+    
+    printf("%d\n", *size);
+    for (i = 0; i < *size; i++)
+    {
+        printf("%d ", i);
+        int j;
+        for (j = 0; j < state_size[i]; j++)
+        {
+            printf("%p ", aux[i][j]);
+        }
+        printf("\n");
+    }
+    
+    printf("aaaa\n");
+    for (i = 0; i < *size; i++)
+    {
+        printf("%d ", i);
+        int j;
+        for (j = 0; j < (1 << CHAR_BIT); j++)
+        {
+            if (autom[i][j] != ERROR_STATE)
+            {
+                printf("(%d, %d) ", j, autom[i][j]);
+            }
+        }
+        printf("\n");
+    }
 }
-
+ 
 
 int main()
 {
@@ -453,10 +559,21 @@ int main()
     
     calc_sets(&work);
     
-    //print_dfs(work);
+    print_dfs(work);
     
     int autom[N][(1 << CHAR_BIT)];
-    //build_automaton(autom, work);
+    int i;
+    for (i = 0; i < N; i++)
+    {
+        int j;
+        for (j = 0; j < (1 << CHAR_BIT); j++)
+        {
+            autom[i][j] = ERROR_STATE;
+        }
+    }
+    int size = 0;
+    printf("--\n");
+    build_automaton(autom, &size, work);
     
     return 0;
 }
