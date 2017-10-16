@@ -9,6 +9,7 @@
 const int BUFFER_SIZE = 300;
 const int ERROR_STATE = -1;
 const int NO_MATCH = -1;
+const int NOT_FINAL = -1;
 
 typedef enum
 {
@@ -27,10 +28,18 @@ typedef struct rule_token_t
     char symbol;
 } rule_token_t;
 
-typedef struct buffer_t
+typedef struct lex_rule_t
 {
+    char* abbrev;
+    int prior;
     int size;
     rule_token_t* list;
+} lex_rule_t;
+
+typedef struct buffer_t
+{
+    int count;
+    lex_rule_t* rule;
 } buffer_t;
 
 typedef struct node_t
@@ -61,131 +70,7 @@ int default_prior[7] =
     [NT_RPAREN] = 4,
 };
 
-/*
-buffer_t input = 
-{
-    .size = 14,
-    .list = (rule_token_t[])
-    {
-        {
-            .type = NT_LPAREN,
-        },
-        {
-            .type = NT_CHAR,
-            .symbol = 'a',
-        },
-        {
-            .type = NT_OR,
-        },
-        {
-            .type = NT_CHAR,
-            .symbol = 'b',
-        },
-        {
-            .type = NT_RPAREN,
-        },
-        {
-            .type = NT_STAR,
-        },
-        {
-            .type = NT_CAT,
-        },
-        {
-            .type = NT_CHAR,
-            .symbol = 'a',
-        },
-        {
-            .type = NT_CAT,
-        },
-        {
-            .type = NT_CHAR,
-            .symbol = 'b',
-        },
-        {
-            .type = NT_CAT,
-        },
-        {
-            .type = NT_CHAR,
-            .symbol = 'b',
-        },
-        {
-            .type = NT_CAT,
-        },
-        {
-            .type = NT_END,
-        },
-    },
-};
-*/
 
-
-buffer_t input = 
-{
-    .size = 18,
-    .list = (rule_token_t[])
-    {
-        {
-            .type = NT_CHAR,
-            .symbol = 'a',
-        },
-        {
-            .type = NT_CAT,
-        },
-        {
-            .type = NT_LPAREN,
-        },
-        {
-            .type = NT_CHAR,
-            .symbol = 'b',
-        },
-        {
-            .type = NT_CAT,
-        },
-        {
-            .type = NT_LPAREN,
-        },
-        {
-            .type = NT_CHAR,
-            .symbol = 'c',
-        },
-        {
-            .type = NT_OR,
-        },
-        {
-            .type = NT_CHAR,
-            .symbol = 'd',
-        },
-        {
-            .type = NT_STAR,
-        },
-        {
-            .type = NT_RPAREN,
-        },
-        {
-            .type = NT_CAT,
-        },
-        {
-            .type = NT_CHAR,
-            .symbol = 'e',
-        },
-        {
-            .type = NT_RPAREN,
-        },
-        {
-            .type = NT_CAT,
-        },
-        {
-            .type = NT_CHAR,
-            .symbol = 'f',
-        },
-        {
-            .type = NT_CAT,
-        },
-        {
-            .type = NT_END,
-        },
-    },
-};
 
 
 void print_arr(node_t* arr[1000], int *sz)
@@ -230,7 +115,7 @@ void print_dfs(node_t* v)
     printf("EXIT\n");
 
     //print_arr(v->first, &v->first_ptr);
-    print_arr(v->follow, &v->follow_ptr);
+    //print_arr(v->follow, &v->follow_ptr);
     printf("====\n");
 }
 
@@ -255,69 +140,86 @@ void link(node_t** work, node_t** current)
     }
 }
 
-node_t* build_parse_tree()
+node_t* build_parse_tree(buffer_t* input)
 {
     struct node_t* work = malloc(sizeof(node_t));
     
     int i;
-    for (i = 0; i < input.size; i++)
+    for (i = 0; i < input->count; i++)
     {
-        struct node_t* current = malloc(sizeof(node_t));
-        current->type = input.list[i].type;
-        current->symbol = input.list[i].symbol;
-        current->prior = default_prior[current->type];
-        
-        switch (current->type)
+        int j;
+        for (j = 0; j < input->rule[i].size; j++)
         {
-            case NT_CHAR: case NT_END:
-                link(&work, &current);
-                
-                work = current;
-                break;
-                
-            case NT_LPAREN:
-                link(&work, &current);
-                
-                work = current;
-                work->left = malloc(sizeof(node_t));
-                work->left->parent = work;
-                work = work->left;
-                break;
-                
-            case NT_RPAREN:
-                while (work->type != NT_LPAREN)
-                {
-                    work = work->parent;
-                }
-                work->prior = 0;
-                break;
-                
-            case NT_STAR:
-                link(&work, &current);
-                
-                current->left = work;
-                work->parent = current;
-                work = current;
-                break;
-                
-            case NT_OR: case NT_CAT:
-                while (work->parent && work->parent->prior <= current->prior)
-                {
-                    work = work->parent;
-                }
-                link(&work, &current);
-                
-                current->left = work;
-                current->right = malloc(sizeof(node_t));
-                current->right->parent = current;
-                work->parent = current;
-                work = current->right;
+            struct node_t* current = malloc(sizeof(node_t));
+            current->type = input->rule[i].list[j].type;
+            current->symbol = input->rule[i].list[j].symbol;
+            current->prior = default_prior[current->type];
+            
+            switch (current->type)
+            {
+                case NT_CHAR: case NT_END:
+                    link(&work, &current);
+                    
+                    work = current;
+                    break;
+                    
+                case NT_LPAREN:
+                    link(&work, &current);
+                    
+                    work = current;
+                    work->left = malloc(sizeof(node_t));
+                    work->left->parent = work;
+                    work = work->left;
+                    break;
+                    
+                case NT_RPAREN:
+                    while (work->type != NT_LPAREN)
+                    {
+                        work = work->parent;
+                    }
+                    work->prior = 0;
+                    break;
+                    
+                case NT_STAR:
+                    link(&work, &current);
+                    
+                    current->left = work;
+                    work->parent = current;
+                    work = current;
+                    break;
+                    
+                case NT_OR: case NT_CAT:
+                    while (work->parent && work->parent->prior <= current->prior)
+                    {
+                        work = work->parent;
+                    }
+                    link(&work, &current);
+                    
+                    current->left = work;
+                    current->right = malloc(sizeof(node_t));
+                    current->right->parent = current;
+                    work->parent = current;
+                    work = current->right;
+            }
         }
-    }
-    
-    while (work->parent)
-    {
-        work = work->parent;
+        
+        while (work->parent)
+        {
+            work = work->parent;
+        }
+        
+        if (i != input->count - 1)
+        {
+            struct node_t* current = malloc(sizeof(node_t));
+            current->type = NT_OR;
+            current->prior = default_prior[current->type];
+            
+            current->left = work;
+            current->right = malloc(sizeof(node_t));
+            current->right->parent = current;
+            work->parent = current;
+            work = current->right;
+        }
     }
     
     return work;
@@ -475,7 +377,8 @@ void print_arr2(node_t* arr[(1 << CHAR_BIT)], int *sz)
 }
 
 
-void build_automaton(int autom[N][(1 << CHAR_BIT)], int* size, node_t* root)
+void build_automaton(int autom[N][(1 << CHAR_BIT)], int* size, int final[N], node_t* root, 
+    buffer_t* input)
 {
     node_t* aux[N][N];
     int state_size[N];
@@ -491,6 +394,16 @@ void build_automaton(int autom[N][(1 << CHAR_BIT)], int* size, node_t* root)
     for (i = 0; i < *size; i++)
     {
         int j;
+        for (j = 0; j < state_size[i]; j++)
+        {
+            if (aux[i][j]->type == NT_END && (final[i] == NOT_FINAL || 
+                input->rule[final[i]].prior < 
+                    input->rule[aux[i][j]->symbol].prior))
+            {
+                final[i] = aux[i][j]->symbol;
+            }
+        }
+        
         for (j = 0; j < (1 << CHAR_BIT); j++)
         {
             state_size[*size] = 0;
@@ -548,14 +461,182 @@ void build_automaton(int autom[N][(1 << CHAR_BIT)], int* size, node_t* root)
                 printf("(%d, %d) ", j, autom[i][j]);
             }
         }
+        if (final[i] != NOT_FINAL)
+        {
+            printf("%s ", input->rule[final[i]].abbrev);
+        }
         printf("\n");
     }
+}
+
+
+void beautify_automaton(int autom[N][(1 << CHAR_BIT)], int* size, int final[N],
+    buffer_t* input)
+{
+    printf(".size = %d,\n.final = (char*[])\n{\n    [0 ... %d] = \"\",\n", *size, *size - 1);
+    int i;
+    for (i = 0; i < *size; i++)
+    {
+        if (final[i] != NOT_FINAL)
+        {
+            printf("    [%d] = \"%s\",\n", i, input->rule[final[i]].abbrev);
+        }
+    }
+    printf("},\n.table = (int*[])\n{\n");
+    
+    for (i = 0; i < *size; i++)
+    {
+        printf("    (int[])\n    {\n        [0 ... (1 << CHAR_BIT) - 1] = ERROR_STATE,\n");
+        int j;
+        for (j = 0; j < (1 << CHAR_BIT); j++)
+        {
+            if (autom[i][j] != ERROR_STATE)
+            {
+                printf("        [\'%c\'] = %d,\n", j, autom[i][j]);
+            }
+        }
+        printf("    }\n");
+    }
+    printf("},\n");
 }
  
 
 int main()
 {
-    node_t* work = build_parse_tree();
+    buffer_t input = 
+    {
+        .count = 2,
+        .rule = (lex_rule_t[])
+        {
+            {
+                .abbrev = "SM",
+                .prior = 1,
+                .size = 14,
+                .list = (rule_token_t[])
+                {
+                    {
+                        .type = NT_LPAREN,
+                    },
+                    {
+                        .type = NT_CHAR,
+                        .symbol = 'a',
+                    },
+                    {
+                        .type = NT_OR,
+                    },
+                    {
+                        .type = NT_CHAR,
+                        .symbol = 'b',
+                    },
+                    {
+                        .type = NT_RPAREN,
+                    },
+                    {
+                        .type = NT_STAR,
+                    },
+                    {
+                        .type = NT_CAT,
+                    },
+                    {
+                        .type = NT_CHAR,
+                        .symbol = 'a',
+                    },
+                    {
+                        .type = NT_CAT,
+                    },
+                    {
+                        .type = NT_CHAR,
+                        .symbol = 'b',
+                    },
+                    {
+                        .type = NT_CAT,
+                    },
+                    {
+                        .type = NT_CHAR,
+                        .symbol = 'b',
+                    },
+                    {
+                        .type = NT_CAT,
+                    },
+                    {
+                        .type = NT_END,
+                        .symbol = 0,
+                    },
+                },
+            },
+            {
+                .abbrev = "ME",
+                .prior = 2,
+                .size = 18,
+                .list = (rule_token_t[])
+                {
+                    {
+                        .type = NT_CHAR,
+                        .symbol = 'a',
+                    },
+                    {
+                        .type = NT_CAT,
+                    },
+                    {
+                        .type = NT_LPAREN,
+                    },
+                    {
+                        .type = NT_CHAR,
+                        .symbol = 'b',
+                    },
+                    {
+                        .type = NT_CAT,
+                    },
+                    {
+                        .type = NT_LPAREN,
+                    },
+                    {
+                        .type = NT_CHAR,
+                        .symbol = 'c',
+                    },
+                    {
+                        .type = NT_OR,
+                    },
+                    {
+                        .type = NT_CHAR,
+                        .symbol = 'd',
+                    },
+                    {
+                        .type = NT_STAR,
+                    },
+                    {
+                        .type = NT_RPAREN,
+                    },
+                    {
+                        .type = NT_CAT,
+                    },
+                    {
+                        .type = NT_CHAR,
+                        .symbol = 'e',
+                    },
+                    {
+                        .type = NT_RPAREN,
+                    },
+                    {
+                        .type = NT_CAT,
+                    },
+                    {
+                        .type = NT_CHAR,
+                        .symbol = 'f',
+                    },
+                    {
+                        .type = NT_CAT,
+                    },
+                    {
+                        .type = NT_END,
+                        .symbol = 1,
+                    },
+                },
+            },
+        },
+    };
+
+    node_t* work = build_parse_tree(&input);
     
     calc_sets(&work);
     
@@ -571,9 +652,15 @@ int main()
             autom[i][j] = ERROR_STATE;
         }
     }
+    
     int size = 0;
     printf("--\n");
-    build_automaton(autom, &size, work);
+    int final[N] = {[0 ... N - 1] = NOT_FINAL};
+    build_automaton(autom, &size, final, work, &input);
+    
+    printf("\n");
+    beautify_automaton(autom, &size, final, &input);
+    printf("\n");
     
     return 0;
 }

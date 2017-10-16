@@ -5,8 +5,11 @@ define revers
 		@echo $(1)
 endef
 
-all: task4
+all: task4 temp
 
+temp: temp.c
+	$(CC) $< -o $@
+	
 task1a: task1a.c
 	$(CC) $< -o $@
 
