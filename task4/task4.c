@@ -20,6 +20,7 @@ typedef enum
     NT_END,
     NT_LPAREN,
     NT_RPAREN,
+    NT_EPS,
 } node_type_t;
 
 typedef struct rule_token_t
@@ -59,10 +60,11 @@ typedef struct node_t
 } node_t;
 
 
-int default_prior[7] = 
+int default_prior[] = 
 {
     [NT_CHAR] = 0,
     [NT_END] = 0,
+    [NT_EPS] = 0,
     [NT_STAR] = 1,
     [NT_CAT] = 2,
     [NT_OR] = 3,
@@ -115,7 +117,7 @@ void print_dfs(node_t* v)
     printf("EXIT\n");
 
     //print_arr(v->first, &v->first_ptr);
-    //print_arr(v->follow, &v->follow_ptr);
+    print_arr(v->follow, &v->follow_ptr);
     printf("====\n");
 }
 
@@ -157,7 +159,7 @@ node_t* build_parse_tree(buffer_t* input)
             
             switch (current->type)
             {
-                case NT_CHAR: case NT_END:
+                case NT_CHAR: case NT_END: case NT_EPS:
                     link(&work, &current);
                     
                     work = current;
@@ -268,7 +270,7 @@ void calc_sets(node_t** v)
     {
         calc_sets(&(*v)->right);
     }
-    if (!(*v)->left && !(*v)->right)
+    if ((*v)->type == NT_CHAR || (*v)->type == NT_END)
     {
         (*v)->is_nullable = false;
         (*v)->first[(*v)->first_ptr++] = (*v)->last[(*v)->last_ptr++] = *v;
@@ -320,6 +322,10 @@ void calc_sets(node_t** v)
         (*v)->is_nullable = (*v)->left->is_nullable;
         merge_arrays((*v)->first, &(*v)->first_ptr, (*v)->left->first, &(*v)->left->first_ptr);
         merge_arrays((*v)->last, &(*v)->last_ptr, (*v)->left->last, &(*v)->left->last_ptr);
+    }
+    else if ((*v)->type == NT_EPS)
+    {
+        (*v)->is_nullable = true;
     }
 }
 
@@ -413,10 +419,18 @@ void build_automaton(int autom[N][(1 << CHAR_BIT)], int* size, int final[N], nod
                 if (aux[i][k]->symbol == j)
                 {
                     merge_sets(aux[*size], &state_size[*size], aux[i][k]->follow, &aux[i][k]->follow_ptr);
+                    if (aux[i][k]->type == NT_EPS)
+                    {
+                        //printf("WTF???\n");
+                    }
                 }
             }
             if (state_size[*size] == 0)
             {
+                if (j == NT_EPS)
+                {
+                    //printf("WTF???\n");
+                }
                 continue;
             }
             int state_idx = find_state(aux, *size, state_size);
@@ -503,6 +517,7 @@ void beautify_automaton(int autom[N][(1 << CHAR_BIT)], int* size, int final[N],
 
 int main()
 {
+    /*
     buffer_t input = 
     {
         .count = 2,
@@ -635,6 +650,74 @@ int main()
             },
         },
     };
+    */
+    
+    buffer_t input = 
+    {
+        .count = 1,
+        .rule = (lex_rule_t[])
+        {
+            {
+                .abbrev = "SM",
+                .prior = 1,
+                .size = 15,
+                .list = (rule_token_t[])
+                {
+                    {
+                        .type = NT_LPAREN,
+                    },
+                    {
+                        .type = NT_LPAREN,
+                    },
+                    {
+                        .type = NT_CHAR,
+                        .symbol = 'b',
+                    },
+                    {
+                        .type = NT_OR,
+                    },
+                    {
+                        .type = NT_EPS,
+                    },
+                    {
+                        .type = NT_RPAREN,
+                    },
+                    {
+                        .type = NT_CAT,
+                    },
+                    {
+                        .type = NT_CHAR,
+                        .symbol = 'd',
+                    },
+                    {
+                        .type = NT_OR,
+                    },
+                    {
+                        .type = NT_CHAR,
+                        .symbol = 'a',
+                    },
+                    {
+                        .type = NT_CAT,
+                    },
+                    {
+                        .type = NT_CHAR,
+                        .symbol = 'd',
+                    },
+                    {
+                        .type = NT_RPAREN,
+                    },
+                    {
+                        .type = NT_CAT,
+                    },
+                    {
+                        .type = NT_END,
+                        .symbol = 0,
+                    },
+                },
+            },
+        },
+    };
+    
 
     node_t* work = build_parse_tree(&input);
     

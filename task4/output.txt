@@ -1,0 +1,108 @@
+[1]
+LF
+[5]
+LF
+[3]
+LF
+[1]
+LF
+[5]
+LF
+[3]
+LF
+[b]
+[b] EXIT
+0x1c93410 
+====
+RG
+[7]
+[7] EXIT
+
+====
+[3] EXIT
+
+====
+[5] EXIT
+
+====
+RG
+[d]
+[d] EXIT
+0x1c9f210 
+====
+[1] EXIT
+
+====
+RG
+[1]
+LF
+[a]
+[a] EXIT
+0x1c9a610 
+====
+RG
+[d]
+[d] EXIT
+0x1c9f210 
+====
+[1] EXIT
+
+====
+[3] EXIT
+
+====
+[5] EXIT
+
+====
+RG
+[4]
+[4] EXIT
+
+====
+[1] EXIT
+
+====
+--
+OPAAA -1
+4
+0 0x1c8af10 0x1c93410 0x1c96d10 
+1 0x1c9a610 
+2 0x1c93410 
+3 0x1c9f210 
+aaaa
+0 (97, 1) (98, 2) (100, 3) 
+1 (100, 3) 
+2 (100, 3) 
+3 SM 
+
+.size = 4,
+.final = (char*[])
+{
+    [0 ... 3] = "",
+    [3] = "SM",
+},
+.table = (int*[])
+{
+    (int[])
+    {
+        [0 ... (1 << CHAR_BIT) - 1] = ERROR_STATE,
+        ['a'] = 1,
+        ['b'] = 2,
+        ['d'] = 3,
+    }
+    (int[])
+    {
+        [0 ... (1 << CHAR_BIT) - 1] = ERROR_STATE,
+        ['d'] = 3,
+    }
+    (int[])
+    {
+        [0 ... (1 << CHAR_BIT) - 1] = ERROR_STATE,
+        ['d'] = 3,
+    }
+    (int[])
+    {
+        [0 ... (1 << CHAR_BIT) - 1] = ERROR_STATE,
+    }
+},
+

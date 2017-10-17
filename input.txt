@@ -1,3 +1,52 @@
-a_9!s qbegin(9.1e1(for)acm>!.9-
-          d
-          lksfj99.1!! q()
+.rule = (lex_rule_t[])
+{
+    {
+        .abbrev = "SM",
+        .prior = 1,
+        .list = (rule_token_t[])
+        {
+            {
+                .type = NT_LPAREN,
+            },
+            {
+                .type = NT_LPAREN,
+            },
+            {
+                .type = NT_RPAREN,
+            },
+            {
+                .type = NT_CAT,
+            },
+            {
+                .type = NT_END,
+                .symbol = 0,
+            },
+        },
+        .size = 15,
+    },
+    {
+        .abbrev = "SM",
+        .prior = 1,
+        .size = 15,
+        .list = (rule_token_t[])
+        {
+            {
+                .type = NT_LPAREN,
+            },
+            {
+                .type = NT_LPAREN,
+            },
+            {
+                .type = NT_RPAREN,
+            },
+            {
+                .type = NT_CAT,
+            },
+            {
+                .type = NT_END,
+                .symbol = 0,
+            },
+        },
+    },
+},
+.count = 1,
