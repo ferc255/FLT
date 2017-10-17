@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -30,6 +31,19 @@ void print_token(char* type, char symbol)
     }
     
     printf("            },\n");
+}
+
+bool dont_need_cat(char* last, char* cur)
+{
+    if (last == "NT_OR" || last == "NT_LPAREN")
+    {
+        return true;
+    }
+    if (cur == "NT_OR" || cur == "NT_RPAREN" || cur == "NT_STAR")
+    {
+        return true;
+    }
+    return false;
 }
 
 void parse_rule(char input[BUFFER_SIZE])
@@ -138,31 +152,40 @@ void parse_rule(char input[BUFFER_SIZE])
     printf("        .prior = %d,\n        .list = (rule_token_t[])\n        {\n", 
         atoi(temp));
     
-    print_token("NT_LPAREN", 0);
-    int size = 0;
+    char* last = "NT_LPAREN";
+    print_token(last, 0);
+    
+    int size = 4;
     for (i = 0; i < strlen(s); )
     {
+        size++;
+        char* cur = "";
+        char symbol = 0;
         if (s[i] == '\\')
         {
             if (s[i + 1] == 'e')
             {
-                print_token("NT_EPS", 0);
+                cur = "NT_EPS";
             }
             else if (s[i] == 'n')
             {
-                print_token("NT_CHAR", '\n');
+                cur = "NT_CHAR";
+                symbol = '\n';
             }
             else if (s[i] == 't')
             {
-                print_token("NT_CHAR", '\t');
+                cur = "NT_CHAR";
+                symbol = '\t';
             }
             else if (s[i] == 'r')
             {
-                print_token("NT_CHAR", '\r');
+                cur = "NT_CHAR";
+                symbol = '\r';
             }
             else
             {
-                print_token("NT_CHAR", s[i]);
+                cur = "NT_CHAR";
+                symbol = s[i];
             }
             
             i += 2;
@@ -171,15 +194,45 @@ void parse_rule(char input[BUFFER_SIZE])
         {
             if (s[i] == '|')
             {
-                print_token
+                cur = "NT_OR";
             }
+            else if (s[i] == '(')
+            {
+                cur = "NT_LPAREN";
+            }
+            else if (s[i] == ')')
+            {
+                cur = "NT_RPAREN";
+            }
+            else if (s[i] == '*')
+            {
+                cur = "NT_STAR";
+            }
+            else
+            {
+                cur = "NT_CHAR";
+                symbol = s[i];
+            }
+            
+            i++;
         }
+        
+        if (!dont_need_cat(last, cur))
+        {
+            size++;
+            print_token("NT_CAT", 0);
+        }
+        print_token(cur, symbol);
+        
+        last = cur;
     }
     
+    print_token("NT_RPAREN", 0);
+    print_token("NT_CAT", 0);
+    print_token("NT_END", 0);
     
+    printf("        },\n        .size = %d,\n    },\n", size);
     
-    
-    printf("%s\n", s);
 }
 
 int main()
@@ -195,7 +248,5 @@ int main()
         parse_rule(temp);
     }
     
-    printf("%d\n", count); 
-    
-    
+    printf("}\n.count = %d,\n", count);
 }

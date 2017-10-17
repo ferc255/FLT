@@ -1,1 +1,2 @@
-INT:1:\d\d*\s\w
+INT:1:(a|b)*abb
+KW:2:fuck_(or|\e)*s|d
