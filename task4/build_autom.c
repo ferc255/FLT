@@ -6,9 +6,7 @@
 
 #define N 200
 
-const int BUFFER_SIZE = 300;
 const int ERROR_STATE = -1;
-const int NO_MATCH = -1;
 const int NOT_FINAL = -1;
 
 typedef enum
@@ -395,7 +393,6 @@ void build_automaton(int autom[N][(1 << CHAR_BIT)], int* size, int final[N], nod
     }
     (*size)++;
     
-    printf("OPAAA %d\n", autom[0][104]);
     
     for (i = 0; i < *size; i++)
     {
@@ -451,6 +448,7 @@ void build_automaton(int autom[N][(1 << CHAR_BIT)], int* size, int final[N], nod
         }
     }
     
+    /*
     printf("%d\n", *size);
     for (i = 0; i < *size; i++)
     {
@@ -481,6 +479,7 @@ void build_automaton(int autom[N][(1 << CHAR_BIT)], int* size, int final[N], nod
         }
         printf("\n");
     }
+    */
 }
 
 
@@ -506,10 +505,32 @@ void beautify_automaton(int autom[N][(1 << CHAR_BIT)], int* size, int final[N],
         {
             if (autom[i][j] != ERROR_STATE)
             {
-                printf("        [\'%c\'] = %d,\n", j, autom[i][j]);
+                printf("        [\'");
+                if (j == '\n')
+                {
+                    printf("\\n");
+                }
+                else if (j == '\t')
+                {
+                    printf("\\t");
+                }
+                else if (j == '\r')
+                {
+                    printf("\\r");
+                }
+                else if (j == '\\')
+                {
+                    printf("\\\\");
+                }
+                else
+                {
+                    printf("%c", j);
+                }
+                printf("\'] = %d,\n", autom[i][j]);
+                //printf("        [\'%c\'] = %d,\n", j, autom[i][j]);
             }
         }
-        printf("    }\n");
+        printf("    },\n");
     }
     printf("},\n");
 }
@@ -517,205 +538,9 @@ void beautify_automaton(int autom[N][(1 << CHAR_BIT)], int* size, int final[N],
 
 int main()
 {
-    /*
     buffer_t input = 
     {
-        .count = 2,
-        .rule = (lex_rule_t[])
-        {
-            {
-                .abbrev = "SM",
-                .prior = 1,
-                .size = 14,
-                .list = (rule_token_t[])
-                {
-                    {
-                        .type = NT_LPAREN,
-                    },
-                    {
-                        .type = NT_CHAR,
-                        .symbol = 'a',
-                    },
-                    {
-                        .type = NT_OR,
-                    },
-                    {
-                        .type = NT_CHAR,
-                        .symbol = 'b',
-                    },
-                    {
-                        .type = NT_RPAREN,
-                    },
-                    {
-                        .type = NT_STAR,
-                    },
-                    {
-                        .type = NT_CAT,
-                    },
-                    {
-                        .type = NT_CHAR,
-                        .symbol = 'a',
-                    },
-                    {
-                        .type = NT_CAT,
-                    },
-                    {
-                        .type = NT_CHAR,
-                        .symbol = 'b',
-                    },
-                    {
-                        .type = NT_CAT,
-                    },
-                    {
-                        .type = NT_CHAR,
-                        .symbol = 'b',
-                    },
-                    {
-                        .type = NT_CAT,
-                    },
-                    {
-                        .type = NT_END,
-                        .symbol = 0,
-                    },
-                },
-            },
-            {
-                .abbrev = "ME",
-                .prior = 2,
-                .size = 18,
-                .list = (rule_token_t[])
-                {
-                    {
-                        .type = NT_CHAR,
-                        .symbol = 'a',
-                    },
-                    {
-                        .type = NT_CAT,
-                    },
-                    {
-                        .type = NT_LPAREN,
-                    },
-                    {
-                        .type = NT_CHAR,
-                        .symbol = 'b',
-                    },
-                    {
-                        .type = NT_CAT,
-                    },
-                    {
-                        .type = NT_LPAREN,
-                    },
-                    {
-                        .type = NT_CHAR,
-                        .symbol = 'c',
-                    },
-                    {
-                        .type = NT_OR,
-                    },
-                    {
-                        .type = NT_CHAR,
-                        .symbol = 'd',
-                    },
-                    {
-                        .type = NT_STAR,
-                    },
-                    {
-                        .type = NT_RPAREN,
-                    },
-                    {
-                        .type = NT_CAT,
-                    },
-                    {
-                        .type = NT_CHAR,
-                        .symbol = 'e',
-                    },
-                    {
-                        .type = NT_RPAREN,
-                    },
-                    {
-                        .type = NT_CAT,
-                    },
-                    {
-                        .type = NT_CHAR,
-                        .symbol = 'f',
-                    },
-                    {
-                        .type = NT_CAT,
-                    },
-                    {
-                        .type = NT_END,
-                        .symbol = 1,
-                    },
-                },
-            },
-        },
-    };
-    */
-    
-    buffer_t input = 
-    {
-        .count = 1,
-        .rule = (lex_rule_t[])
-        {
-            {
-                .abbrev = "SM",
-                .prior = 1,
-                .size = 15,
-                .list = (rule_token_t[])
-                {
-                    {
-                        .type = NT_LPAREN,
-                    },
-                    {
-                        .type = NT_LPAREN,
-                    },
-                    {
-                        .type = NT_CHAR,
-                        .symbol = 'b',
-                    },
-                    {
-                        .type = NT_OR,
-                    },
-                    {
-                        .type = NT_EPS,
-                    },
-                    {
-                        .type = NT_RPAREN,
-                    },
-                    {
-                        .type = NT_CAT,
-                    },
-                    {
-                        .type = NT_CHAR,
-                        .symbol = 'd',
-                    },
-                    {
-                        .type = NT_OR,
-                    },
-                    {
-                        .type = NT_CHAR,
-                        .symbol = 'a',
-                    },
-                    {
-                        .type = NT_CAT,
-                    },
-                    {
-                        .type = NT_CHAR,
-                        .symbol = 'd',
-                    },
-                    {
-                        .type = NT_RPAREN,
-                    },
-                    {
-                        .type = NT_CAT,
-                    },
-                    {
-                        .type = NT_END,
-                        .symbol = 0,
-                    },
-                },
-            },
-        },
+        #include "lex_sequence.h"
     };
     
 
@@ -723,7 +548,7 @@ int main()
     
     calc_sets(&work);
     
-    print_dfs(work);
+    //print_dfs(work);
     
     int autom[N][(1 << CHAR_BIT)];
     int i;
@@ -737,13 +562,10 @@ int main()
     }
     
     int size = 0;
-    printf("--\n");
     int final[N] = {[0 ... N - 1] = NOT_FINAL};
     build_automaton(autom, &size, final, work, &input);
-    
-    printf("\n");
+
     beautify_automaton(autom, &size, final, &input);
-    printf("\n");
     
     return 0;
 }

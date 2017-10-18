@@ -2,32 +2,45 @@
 #include <stdio.h>
 #include <string.h>
 
-const int BUFFER_SIZE = 300;
+const int BUFFER_SIZE = 1000;
+const char NOT_CHAR = 254;
 
 void print_token(char* type, char symbol)
 {
-    printf("            {\n                .type = %s,\n", type);
-    
-    if (symbol)
+    if (type == "NT_END")
     {
-        printf("                .symbol = \'");
-        if (symbol == '\n')
+        printf("            {\n                .type = NT_END,\n");
+        printf("                .symbol = %d,\n", symbol);
+    }
+    else
+    {
+        printf("            {\n                .type = %s,\n", type);
+        
+        if (symbol != NOT_CHAR)
         {
-            printf("\\n");
+            printf("                .symbol = \'");
+            if (symbol == '\n')
+            {
+                printf("\\n");
+            }
+            else if (symbol == '\t')
+            {
+                printf("\\t");
+            }
+            else if (symbol == '\r')
+            {
+                printf("\\r");
+            }
+            else if (symbol == '\\')
+            {
+                printf("\\\\");
+            }
+            else
+            {
+                printf("%c", symbol);
+            }
+            printf("\',\n");
         }
-        else if (symbol == '\t')
-        {
-            printf("\\t");
-        }
-        else if (symbol == '\r')
-        {
-            printf("\\r");
-        }
-        else
-        {
-            printf("%c", symbol);
-        }
-        printf("\',\n");
     }
     
     printf("            },\n");
@@ -46,7 +59,7 @@ bool dont_need_cat(char* last, char* cur)
     return false;
 }
 
-void parse_rule(char input[BUFFER_SIZE])
+void parse_rule(char input[BUFFER_SIZE], int idx)
 {
     int first_semic = 0;
     int second_semic = 0;
@@ -133,6 +146,7 @@ void parse_rule(char input[BUFFER_SIZE])
         }
     }
     s[s_ptr - 1] = '\0';
+    //printf("%s", s);
     
     char temp[BUFFER_SIZE];
     for (i = 0; i < first_semic; i++)
@@ -140,6 +154,7 @@ void parse_rule(char input[BUFFER_SIZE])
         temp[i] = input[i];
     }
     temp[i] = '\0';
+    
 
     printf("    {\n        .abbrev = \"%s\",\n", temp);
     
@@ -153,31 +168,31 @@ void parse_rule(char input[BUFFER_SIZE])
         atoi(temp));
     
     char* last = "NT_LPAREN";
-    print_token(last, 0);
+    print_token(last, NOT_CHAR);
     
     int size = 4;
     for (i = 0; i < strlen(s); )
     {
         size++;
         char* cur = "";
-        char symbol = 0;
+        char symbol = NOT_CHAR;
         if (s[i] == '\\')
         {
             if (s[i + 1] == 'e')
             {
                 cur = "NT_EPS";
             }
-            else if (s[i] == 'n')
+            else if (s[i + 1] == 'n')
             {
                 cur = "NT_CHAR";
                 symbol = '\n';
             }
-            else if (s[i] == 't')
+            else if (s[i + 1] == 't')
             {
                 cur = "NT_CHAR";
                 symbol = '\t';
             }
-            else if (s[i] == 'r')
+            else if (s[i + 1] == 'r')
             {
                 cur = "NT_CHAR";
                 symbol = '\r';
@@ -185,7 +200,7 @@ void parse_rule(char input[BUFFER_SIZE])
             else
             {
                 cur = "NT_CHAR";
-                symbol = s[i];
+                symbol = s[i + 1];
             }
             
             i += 2;
@@ -220,16 +235,16 @@ void parse_rule(char input[BUFFER_SIZE])
         if (!dont_need_cat(last, cur))
         {
             size++;
-            print_token("NT_CAT", 0);
+            print_token("NT_CAT", NOT_CHAR);
         }
         print_token(cur, symbol);
         
         last = cur;
     }
     
-    print_token("NT_RPAREN", 0);
-    print_token("NT_CAT", 0);
-    print_token("NT_END", 0);
+    print_token("NT_RPAREN", NOT_CHAR);
+    print_token("NT_CAT", NOT_CHAR);
+    print_token("NT_END", idx);
     
     printf("        },\n        .size = %d,\n    },\n", size);
     
@@ -243,10 +258,10 @@ int main()
     printf(".rule = (lex_rule_t[])\n{\n");
     while (fgets(temp, sizeof temp, stdin))
     {
-        count++;
         strcat(input, temp);
-        parse_rule(temp);
+        parse_rule(temp, count);
+        count++;
     }
     
-    printf("}\n.count = %d,\n", count);
+    printf("},\n.count = %d,\n", count);
 }
