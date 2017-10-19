@@ -1,5 +1,4 @@
-INT:1:\d\d\d\d\d\d\d\w\w\w
-W:2:a\d
-Q:3:(\n)*w|\d1
-WS:1:\s|\n
-FLOAT:10:(+|-|\e)\d\d*(.\d*|\e)(e(+|-|\e)\d\d*|\e)
+id:10:d\|*|c\*\\
+AWESOME:2:\w\|
+COOL:3:a"
+MM:12:d\|\|

@@ -26,7 +26,7 @@ typedef struct automaton_list_t
 int calc_max_match(automaton_t* automaton, char* input, int start_pos, char** abbrev)
 {
     int cur_state = 0;
-    int result = automaton->final[0] ? 0 : NO_MATCH;
+    int result;
     if (automaton->final[0] == "")
     {
         result = NO_MATCH;
@@ -108,6 +108,7 @@ int main()
     {
         char* abbrev;
         int max_match = calc_max_match(&automaton, input, i, &abbrev);
+        //printf("%d\n", max_match);
         
         if (max_match == NO_MATCH)
         {
