@@ -92,7 +92,7 @@ void print_dfs(node_t* v)
     }
     else
     {
-        printf("[%c]\n", v->symbol);
+        printf("[\'%c\']\n", v->symbol);
     }
     if (v->left)
     {
@@ -110,7 +110,7 @@ void print_dfs(node_t* v)
     }
     else
     {
-        printf("[%c] ", v->symbol);
+        printf("[\'%c\'] ", v->symbol);
     }
     printf("EXIT\n");
 
@@ -173,7 +173,7 @@ node_t* build_parse_tree(buffer_t* input)
                     break;
                     
                 case NT_RPAREN:
-                    while (work->type != NT_LPAREN)
+                    while (work->type != NT_LPAREN || work->prior == 0)
                     {
                         work = work->parent;
                     }
