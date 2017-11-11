@@ -1,2 +1,2 @@
-calpha:1:c
-dalpha:1:d
+TOK:1:ca|kut
+RR:1:cb\d

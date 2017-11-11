@@ -13,16 +13,20 @@ int get_token_id(token_list_t* token_list, token_t* token)
     int i;
     for (i = 0; i < token_list->size; i++)
     {
-        if (token_list->list[i].type == token->type)
+        if (strcmp(token_list->list[i].type, token->type) == 0)
         {
-            if (token_list->list[i].data == token->data)
+            //printf("-----\n");
+            //printf("%s %s\n", token_list->list[i].data, token->data);
+            if (strcmp(token_list->list[i].data, token->data) == 0)
             {
+                //printf("YES, ENTER\n");
                 return i;
             }
-            if (token_list->list[i].data == "")
+            if (strcmp(token_list->list[i].data, "") == 0)
             {
                 result = i;
             }
+            //printf("----------\n");
         }
     }
     
@@ -63,8 +67,10 @@ bool syntax_parse(tables_t* tables)
                 derivation[derivation_ptr++] = cell.num;
                 state_top -= tables->grammar_size[cell.num];
                 cur_state = state[state_top];
+                printf("%d\n", cur_state);
                 state[++state_top] = 
                     tables->trans[cur_state][tables->grammar_left[cell.num]].num;
+                printf("%d\n", state[state_top]);
                 break;
             case AC_ERROR:
                 printf("Column = %d\n", column);
@@ -90,6 +96,7 @@ bool syntax_parse(tables_t* tables)
 
 int main()
 {
+    /*
     tables_t tables =
     {
         .grammar_size = (int[])
@@ -111,7 +118,7 @@ int main()
                 },
                 {
                     .type = "dalpha",
-                    .data = "",
+                    .data = "", ////// ???????? remove
                 },
                 {
                     .type = "$",
@@ -208,6 +215,157 @@ int main()
         		{AC_REDUCE, 1},
         		{AC_ERROR, 0},
         		{AC_ERROR, 0},
+        	},
+        },
+    };
+    */
+    
+    tables_t tables =
+    {
+        .grammar_size = (int[])
+        {
+            4, 2, 2,
+        },
+        .grammar_left = (int[])
+        {
+            4, 5, 5,
+        },
+        .token_list = 
+        {
+            .size = 7,
+            .list = (token_t[])
+            {
+                {
+                    .type = "RR",
+                    .data = "",
+                },
+                {
+                    .type = "TOK",
+                    .data = "kut",
+                },
+                {
+                    .type = "TOK",
+                    .data = "ca",
+                },
+                {
+                    .type = "TOK",
+                    .data = "",
+                },
+                {
+                    .type = "sen",
+                    .data = "",
+                },
+                {
+                    .type = "C",
+                    .data = "",
+                },
+                {
+                    .type = "$",
+                    .data = "",
+                },
+            },
+        },
+        .trans = (table_cell_t*[])
+        {
+        	(table_cell_t[])
+        	{
+        		{AC_SHIFT, 1},
+        		{AC_ERROR, 0},
+        		{AC_ERROR, 0},
+        		{AC_ERROR, 0},
+        		{AC_SHIFT, 4},
+        		{AC_ERROR, 0},
+        		{AC_ERROR, 0},
+        	},
+        	(table_cell_t[])
+        	{
+        		{AC_ERROR, 0},
+        		{AC_ERROR, 0},
+        		{AC_SHIFT, 2},
+        		{AC_ERROR, 0},
+        		{AC_ERROR, 0},
+        		{AC_ERROR, 0},
+        		{AC_ERROR, 0},
+        	},
+        	(table_cell_t[])
+        	{
+        		{AC_SHIFT, 3},
+        		{AC_ERROR, 0},
+        		{AC_ERROR, 0},
+        		{AC_ERROR, 0},
+        		{AC_ERROR, 0},
+        		{AC_ERROR, 0},
+        		{AC_ERROR, 0},
+        	},
+        	(table_cell_t[])
+        	{
+        		{AC_SHIFT, 7},
+        		{AC_SHIFT, 6},
+        		{AC_SHIFT, 6},
+        		{AC_SHIFT, 6},
+        		{AC_ERROR, 0},
+        		{AC_SHIFT, 5},
+        		{AC_ERROR, 0},
+        	},
+        	(table_cell_t[])
+        	{
+        		{AC_ERROR, 0},
+        		{AC_ERROR, 0},
+        		{AC_ERROR, 0},
+        		{AC_ERROR, 0},
+        		{AC_ERROR, 0},
+        		{AC_ERROR, 0},
+        		{AC_ACCEPT, 0},
+        	},
+        	(table_cell_t[])
+        	{
+        		{AC_ERROR, 0},
+        		{AC_ERROR, 0},
+        		{AC_ERROR, 0},
+        		{AC_ERROR, 0},
+        		{AC_ERROR, 0},
+        		{AC_ERROR, 0},
+        		{AC_REDUCE, 0},
+        	},
+        	(table_cell_t[])
+        	{
+        		{AC_SHIFT, 7},
+        		{AC_SHIFT, 6},
+        		{AC_SHIFT, 6},
+        		{AC_SHIFT, 6},
+        		{AC_ERROR, 0},
+        		{AC_SHIFT, 8},
+        		{AC_ERROR, 0},
+        	},
+        	(table_cell_t[])
+        	{
+        		{AC_ERROR, 0},
+        		{AC_SHIFT, 9},
+        		{AC_ERROR, 0},
+        		{AC_ERROR, 0},
+        		{AC_ERROR, 0},
+        		{AC_ERROR, 0},
+        		{AC_ERROR, 0},
+        	},
+        	(table_cell_t[])
+        	{
+        		{AC_ERROR, 0},
+        		{AC_ERROR, 0},
+        		{AC_ERROR, 0},
+        		{AC_ERROR, 0},
+        		{AC_ERROR, 0},
+        		{AC_ERROR, 0},
+        		{AC_REDUCE, 1},
+        	},
+        	(table_cell_t[])
+        	{
+        		{AC_ERROR, 0},
+        		{AC_ERROR, 0},
+        		{AC_ERROR, 0},
+        		{AC_ERROR, 0},
+        		{AC_ERROR, 0},
+        		{AC_ERROR, 0},
+        		{AC_REDUCE, 2},
         	},
         },
     };
