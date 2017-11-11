@@ -9,10 +9,13 @@ cc build_autom.c -o mybison
 echo "automaton building..."
 ./mybison > automaton.h
 
-echo "cc main.c -o task4"
-cc main.c -o task4
+#echo "cc main.c -o task4"
+#cc main.c -o task4
 
-echo ""
-echo "cleaning temporarily files..."
-rm lex_sequence.h automaton.h myflex mybison
-echo "_ ready for using _"
+#echo ""
+#echo "cleaning temporarily files..."
+#rm lex_sequence.h automaton.h myflex mybison
+#echo "_ ready for using _"
+
+echo cc main.c -o task5
+cc main.c -o task5
