@@ -93,7 +93,7 @@ token_t my_yylex()
 {
     automaton_t automaton =
     {
-        #include "automaton.h"
+        #include "lex_automaton.h"
     }; 
     
     static bool is_initialized = false;

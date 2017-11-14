@@ -1,13 +1,13 @@
 #!/bin/bash
 echo "cc lex_part.c -o myflex"
-cc myflex.c -o myflex
+cc parse_lex_rules.c -o PLR
 echo "generation lex-sequence..."
-./myflex < rules.txt > lex_sequence.h
+./PLR < rules.txt > lex_sequence.h
 
 echo "cc build_autom.c -o mybison"
-cc build_autom.c -o mybison
+cc build_lex_autom.c -o BLA
 echo "automaton building..."
-./mybison > automaton.h
+./BLA > lex_automaton.h
 
 #echo "cc main.c -o task4"
 #cc main.c -o task4
