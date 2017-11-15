@@ -2,7 +2,7 @@
 #define _VALUES_H_
 
 
-
+#define NM 100
 #define NOT_FOUND -1
 
 typedef enum
@@ -13,12 +13,60 @@ typedef enum
 	AC_ERROR,
 } action_t;
 
+typedef struct
+{
+	int size;
+	int graph[NM][NM];
+} graph_t;
+
+typedef struct item_t
+{
+    int num;
+    int pos;
+    int end;
+} item_t;
+
+typedef struct item_list_t
+{
+    int size;
+    item_t list[NM];
+} item_list_t;
+
+typedef struct pair_t
+{
+    char type[NM];
+    char data[NM];
+} pair_t;
 
 typedef struct token_t
 {
     char* type;
     char* data;
 } token_t;
+
+typedef struct prod_t
+{
+    int size;
+    pair_t* list;
+} prod_t;
+
+typedef struct grammar_t
+{
+    int size;
+    prod_t* prod;
+} grammar_t;
+
+typedef struct set_t
+{
+    int size;
+    int list[NM];
+} set_t;
+
+typedef struct first_t
+{
+    int size;
+    set_t set[NM];
+} first_t;
 
 typedef struct table_cell_t
 {
