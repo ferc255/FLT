@@ -13,10 +13,10 @@ typedef enum
 	AC_ERROR,
 } action_t;
 
-typedef struct
+typedef struct graph_t
 {
 	int size;
-	int graph[NM][NM];
+	int matrix[NM][NM];
 } graph_t;
 
 typedef struct item_t
