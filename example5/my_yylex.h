@@ -125,12 +125,8 @@ token_t my_yylex()
         result.data = malloc(max_match);
         memcpy(result.data, input + i, max_match);
         
-        i += max_match;
         
-        if (strcmp(result.type, "WS") == 0)
-        {
-            continue;
-        }
+        i += max_match;
         
         return result;
     }

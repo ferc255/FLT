@@ -1,2 +1,0 @@
-TOK:1:ca|kut
-RR:1:cb\d

@@ -1,6 +1,63 @@
 .rule = (lex_rule_t[])
 {
     {
+        .abbrev = "MUL",
+        .prior = 1,
+        .list = (rule_token_t[])
+        {
+            {
+                .type = NT_LPAREN,
+            },
+            {
+                .type = NT_CHAR,
+                .symbol = '*',
+            },
+            {
+                .type = NT_OR,
+            },
+            {
+                .type = NT_CHAR,
+                .symbol = '/',
+            },
+            {
+                .type = NT_RPAREN,
+            },
+            {
+                .type = NT_CAT,
+            },
+            {
+                .type = NT_END,
+                .symbol = 0,
+            },
+        },
+        .size = 7,
+    },
+    {
+        .abbrev = "EQ",
+        .prior = 1,
+        .list = (rule_token_t[])
+        {
+            {
+                .type = NT_LPAREN,
+            },
+            {
+                .type = NT_CHAR,
+                .symbol = '=',
+            },
+            {
+                .type = NT_RPAREN,
+            },
+            {
+                .type = NT_CAT,
+            },
+            {
+                .type = NT_END,
+                .symbol = 1,
+            },
+        },
+        .size = 5,
+    },
+    {
         .abbrev = "DIG",
         .prior = 1,
         .list = (rule_token_t[])
@@ -168,117 +225,10 @@
             },
             {
                 .type = NT_END,
-                .symbol = 0,
+                .symbol = 2,
             },
         },
         .size = 48,
     },
-    {
-        .abbrev = "OP",
-        .prior = 1,
-        .list = (rule_token_t[])
-        {
-            {
-                .type = NT_LPAREN,
-            },
-            {
-                .type = NT_CHAR,
-                .symbol = '+',
-            },
-            {
-                .type = NT_OR,
-            },
-            {
-                .type = NT_CHAR,
-                .symbol = '*',
-            },
-            {
-                .type = NT_RPAREN,
-            },
-            {
-                .type = NT_CAT,
-            },
-            {
-                .type = NT_END,
-                .symbol = 1,
-            },
-        },
-        .size = 7,
-    },
-    {
-        .abbrev = "LP",
-        .prior = 1,
-        .list = (rule_token_t[])
-        {
-            {
-                .type = NT_LPAREN,
-            },
-            {
-                .type = NT_CHAR,
-                .symbol = '(',
-            },
-            {
-                .type = NT_RPAREN,
-            },
-            {
-                .type = NT_CAT,
-            },
-            {
-                .type = NT_END,
-                .symbol = 2,
-            },
-        },
-        .size = 5,
-    },
-    {
-        .abbrev = "RP",
-        .prior = 1,
-        .list = (rule_token_t[])
-        {
-            {
-                .type = NT_LPAREN,
-            },
-            {
-                .type = NT_CHAR,
-                .symbol = ')',
-            },
-            {
-                .type = NT_RPAREN,
-            },
-            {
-                .type = NT_CAT,
-            },
-            {
-                .type = NT_END,
-                .symbol = 3,
-            },
-        },
-        .size = 5,
-    },
-    {
-        .abbrev = "WS",
-        .prior = 1,
-        .list = (rule_token_t[])
-        {
-            {
-                .type = NT_LPAREN,
-            },
-            {
-                .type = NT_CHAR,
-                .symbol = ' ',
-            },
-            {
-                .type = NT_RPAREN,
-            },
-            {
-                .type = NT_CAT,
-            },
-            {
-                .type = NT_END,
-                .symbol = 4,
-            },
-        },
-        .size = 5,
-    },
 },
-.count = 5,
+.count = 3,
