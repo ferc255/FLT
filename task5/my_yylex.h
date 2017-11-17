@@ -44,6 +44,7 @@ int calc_max_match(automaton_t* automaton, char* input, int start_pos, char** ab
     for (i = start_pos; i < strlen(input); i++)
     {
         cur_state = automaton->table[cur_state][input[i]];
+        
         if (cur_state == ERROR_STATE)
         {
             return result;
@@ -113,12 +114,12 @@ token_t my_yylex()
     for (; i < strlen(input); )
     {
         token_t result;
+        //printf("%d\n", i);
         int max_match = calc_max_match(&automaton, input, i, &result.type);
-        
         
         if (max_match == NO_MATCH)
         {
-            printf("Error while parsing at %d position.\n", i);
+            printf("[my_yylex.h] Error while parsing at %d position.\n", i);
             exit(0);
         }
         

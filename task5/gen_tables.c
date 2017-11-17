@@ -7,6 +7,7 @@
 
 int all_size = 0;
 
+int path[NM];
 int used[NM];
 graph_t graph;
 first_t first;
@@ -104,7 +105,7 @@ void calc_first(pair_t* pair, grammar_t* grammar)
 	used[idx] = 2;
 }
 
-
+/*
 int comparator(const void* f, const void* s)
 {
 	item_t* a = ((item_t*) f);
@@ -116,6 +117,22 @@ int comparator(const void* f, const void* s)
 	if (a->pos != b->pos)
 	{
 	    return a->pos - b->pos;
+	}
+	return a->end - b->end;
+}
+*/
+
+int comparator(const void* f, const void* s)
+{
+	item_t* a = ((item_t*) f);
+	item_t* b = ((item_t*) s);
+	if (a->pos != b->pos)
+	{
+	    return b->pos - a->pos;
+	}
+	if (a->num != b->num)
+	{
+	    return a->num - b->num;
 	}
 	return a->end - b->end;
 }
@@ -258,6 +275,7 @@ void make_transition(int idx, pair_t* edge, grammar_t* grammar)
 
 	if (!found)
 	{
+	    path[graph.size] = idx;
 		graph.matrix[idx][get_token_id(edge)] = graph.size;
 		graph.size++;
 	}
@@ -321,8 +339,9 @@ void build_automaton(grammar_t* grammar)
 			{
 			    if (action[i][item->end].num != 0)
 			    {
-			        printf("[gen_tables.c] Bad grammar for (%d, %d)\n", i, item->end);
-			        exit(0);
+			        printf("[gen_tables.c] Bad grammar for (%d, %d) ", i, item->end);
+			        printf("\'<%s,%s>\'\n", all_tokens[item->end].type, all_tokens[item->end].data);
+			        //exit(0);
 			    }
 			    
 				if (item->num == 0)
@@ -401,6 +420,7 @@ void print_scheme(grammar_t* grammar)
     int i;
     for (i = 0; i < graph.size; i++)
     {
+        printf("(%d) <- (%d)\n", i, path[i]);
         int j;
         for (j = 0; j < scheme[i].size; j++)
         {
@@ -477,10 +497,12 @@ int main()
         */
     }
     
+    
+    
     build_scheme(&grammar);
     
     
-  //  print_scheme(&grammar);
+    //print_scheme(&grammar);
     
     
     

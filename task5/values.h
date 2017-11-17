@@ -2,7 +2,7 @@
 #define _VALUES_H_
 
 
-#define NM 100
+#define NM 300
 #define NOT_FOUND -1
 
 typedef enum

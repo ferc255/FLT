@@ -1,11 +1,11 @@
 #!/bin/bash
-echo "cc lex_part.c -o myflex"
+echo "cc lex_part.c -o PLR"
 cc parse_lex_rules.c -o PLR
 echo "Generation lex-sequence..."
 ./PLR < lex_rules.txt > lex_sequence.h
 
 echo ""
-echo "cc build_autom.c -o mybison"
+echo "cc build_autom.c -o BLA"
 cc build_lex_autom.c -o BLA
 echo "Automaton building..."
 ./BLA > lex_automaton.h

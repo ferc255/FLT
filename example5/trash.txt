@@ -1,3 +1,4 @@
+# grammars #
 {A}<b>{Q}<e>
 {Q}{o}
 {Q}{o}{Q}
@@ -5,9 +6,9 @@
 {o}<W>{S}{o}
 {o}<b>{Q}<e>
 {S}{E}
-{S}{E}<+>{S}
-{S}<f>{S}<T>{S}<s>{S}
+{S}{S}<+>{E}
 {E}<L>{Q}<i>{S}<e>
+{E}<f>{S}<T>{S}<s>{S}
 {E}<I>
 {E}<X>
 {E}<LP>{S}<RP>

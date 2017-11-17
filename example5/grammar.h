@@ -8,7 +8,7 @@
                 .data = "",
             },
             {
-                .type = "S",
+                .type = "A",
                 .data = "",
             },
         },
@@ -18,19 +18,121 @@
         .list = (pair_t[])
         {
             {
+                .type = "A",
+                .data = "",
+            },
+            {
+                .type = "b",
+                .data = "",
+            },
+            {
+                .type = "Q",
+                .data = "",
+            },
+            {
+                .type = "e",
+                .data = "",
+            },
+        },
+        .size = 4,
+    },
+    {
+        .list = (pair_t[])
+        {
+            {
+                .type = "Q",
+                .data = "",
+            },
+            {
+                .type = "o",
+                .data = "",
+            },
+        },
+        .size = 2,
+    },
+    {
+        .list = (pair_t[])
+        {
+            {
+                .type = "Q",
+                .data = "",
+            },
+            {
+                .type = "o",
+                .data = "",
+            },
+            {
+                .type = "Q",
+                .data = "",
+            },
+        },
+        .size = 3,
+    },
+    {
+        .list = (pair_t[])
+        {
+            {
+                .type = "o",
+                .data = "",
+            },
+            {
+                .type = "V",
+                .data = "",
+            },
+            {
+                .type = "I",
+                .data = "",
+            },
+            {
+                .type = "=",
+                .data = "",
+            },
+            {
+                .type = "S",
+                .data = "",
+            },
+        },
+        .size = 5,
+    },
+    {
+        .list = (pair_t[])
+        {
+            {
+                .type = "o",
+                .data = "",
+            },
+            {
+                .type = "W",
+                .data = "",
+            },
+            {
                 .type = "S",
                 .data = "",
             },
             {
-                .type = "L",
+                .type = "o",
+                .data = "",
+            },
+        },
+        .size = 4,
+    },
+    {
+        .list = (pair_t[])
+        {
+            {
+                .type = "o",
                 .data = "",
             },
             {
-                .type = "EQ",
+                .type = "b",
                 .data = "",
             },
             {
-                .type = "R",
+                .type = "Q",
+                .data = "",
+            },
+            {
+                .type = "e",
                 .data = "",
             },
         },
@@ -44,7 +146,7 @@
                 .data = "",
             },
             {
-                .type = "R",
+                .type = "E",
                 .data = "",
             },
         },
@@ -54,29 +156,97 @@
         .list = (pair_t[])
         {
             {
-                .type = "L",
+                .type = "S",
                 .data = "",
             },
             {
-                .type = "MUL",
+                .type = "E",
                 .data = "",
             },
             {
-                .type = "R",
+                .type = "+",
+                .data = "",
+            },
+            {
+                .type = "S",
                 .data = "",
             },
         },
-        .size = 3,
+        .size = 4,
     },
     {
         .list = (pair_t[])
         {
             {
+                .type = "S",
+                .data = "",
+            },
+            {
+                .type = "f",
+                .data = "",
+            },
+            {
+                .type = "S",
+                .data = "",
+            },
+            {
+                .type = "T",
+                .data = "",
+            },
+            {
+                .type = "S",
+                .data = "",
+            },
+            {
+                .type = "s",
+                .data = "",
+            },
+            {
+                .type = "S",
+                .data = "",
+            },
+        },
+        .size = 7,
+    },
+    {
+        .list = (pair_t[])
+        {
+            {
+                .type = "E",
+                .data = "",
+            },
+            {
                 .type = "L",
                 .data = "",
             },
             {
-                .type = "DIG",
+                .type = "Q",
+                .data = "",
+            },
+            {
+                .type = "i",
+                .data = "",
+            },
+            {
+                .type = "S",
+                .data = "",
+            },
+            {
+                .type = "e",
+                .data = "",
+            },
+        },
+        .size = 6,
+    },
+    {
+        .list = (pair_t[])
+        {
+            {
+                .type = "E",
+                .data = "",
+            },
+            {
+                .type = "I",
                 .data = "",
             },
         },
@@ -86,11 +256,11 @@
         .list = (pair_t[])
         {
             {
-                .type = "R",
+                .type = "E",
                 .data = "",
             },
             {
-                .type = "L",
+                .type = "X",
                 .data = "",
             },
         },
@@ -100,19 +270,23 @@
         .list = (pair_t[])
         {
             {
-                .type = "R",
+                .type = "E",
                 .data = "",
             },
             {
-                .type = "DIG",
-                .data = "12",
+                .type = "LP",
+                .data = "",
             },
             {
-                .type = "R",
+                .type = "S",
+                .data = "",
+            },
+            {
+                .type = "RP",
                 .data = "",
             },
         },
-        .size = 3,
+        .size = 4,
     },
 },
-.size = 7,
+.size = 14,

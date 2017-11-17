@@ -55,11 +55,13 @@ bool syntax_parse(tables_t* tables)
         {
             case AC_SHIFT:
                 state[++state_top] = cell.num;
+                //printf("SHIFT %s\n", input.type);
                 input = my_yylex();
                 //printf("%s %s\n", input.type, input.data);
                 break;
             case AC_REDUCE:
                 derivation[derivation_ptr++] = cell.num;
+                //printf("REDUCE in %s\n", tables->token_list.list[tables->grammar_left[cell.num]].type);
                 state_top -= tables->grammar_size[cell.num];
                 cur_state = state[state_top];
                 //printf("REDUCE %d\n", cur_state);
